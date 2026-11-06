@@ -1,6 +1,8 @@
 export interface Exercise {
   id: string
   name: string
+  /** Körperregion für eigene Übungen (Katalogübungen bekommen sie über den Namen) */
+  region?: string
 }
 
 /** Eine Übung innerhalb eines Trainingstags */

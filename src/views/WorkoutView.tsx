@@ -3,6 +3,7 @@ import type { AppData, Session, SessionEntry, SetEntry } from '../types'
 import { ensureExercise, exerciseName, lastSets, updateSession } from '../store'
 import { formatDate, formatKg, formatSet, formatTimer } from '../format'
 import NumInput from '../components/NumInput'
+import ExercisePicker from '../components/ExercisePicker'
 
 interface Props {
   data: AppData
@@ -17,7 +18,7 @@ interface Rest {
 
 export default function WorkoutView({ data, update, session }: Props) {
   const [rest, setRest] = useState<Rest | null>(null)
-  const [newEx, setNewEx] = useState('')
+  const [picking, setPicking] = useState(false)
   const audioRef = useRef<AudioContext | null>(null)
   const elapsed = useNow(1000) - session.startedAt
 
@@ -56,10 +57,11 @@ export default function WorkoutView({ data, update, session }: Props) {
   const removeSet = (ei: number) =>
     patchEntry(ei, (e) => ({ ...e, sets: e.sets.slice(0, -1) }))
 
-  const addExercise = () => {
-    if (!newEx.trim()) return
+  const addExercise = (name: string, region: string | undefined) => {
     update((d) => {
-      const [d2, ex] = ensureExercise(d, newEx)
+      const [d2, ex] = ensureExercise(d, name, region)
+      const current = d2.sessions.find((s) => s.id === session.id)
+      if (current?.entries.some((e) => e.exerciseId === ex.id)) return d2 // schon im Training
       const last = lastSets(d2, ex.id)
       const sets: SetEntry[] = (last?.sets ?? [null, null, null]).map((p) => ({
         weight: p?.weight ?? null,
@@ -71,7 +73,6 @@ export default function WorkoutView({ data, update, session }: Props) {
         entries: [...s.entries, { exerciseId: ex.id, restSec: 90, targetReps: '', sets }],
       }))
     })
-    setNewEx('')
   }
 
   const finish = () => {
@@ -157,19 +158,15 @@ export default function WorkoutView({ data, update, session }: Props) {
         )
       })}
 
-      <div className="row add-row">
-        <input
-          list="exercise-list-workout"
-          placeholder="Übung hinzufügen"
-          value={newEx}
-          onChange={(e) => setNewEx(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && addExercise()}
+      <button className="btn" style={{ width: '100%' }} onClick={() => setPicking(true)}>+ Übung hinzufügen</button>
+      {picking && (
+        <ExercisePicker
+          data={data}
+          addedNames={session.entries.map((e) => exerciseName(data, e.exerciseId))}
+          onPick={addExercise}
+          onClose={() => setPicking(false)}
         />
-        <button className="btn" onClick={addExercise}>+</button>
-      </div>
-      <datalist id="exercise-list-workout">
-        {data.exercises.map((e) => <option key={e.id} value={e.name} />)}
-      </datalist>
+      )}
 
       <button className="btn danger-outline" onClick={() => discard()}>Training abbrechen</button>
 

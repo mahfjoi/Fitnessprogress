@@ -293,3 +293,58 @@ input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 }
 .import-preview ul { margin: 4px 0 8px; padding-left: 18px; }
 .card h3 { margin-bottom: 6px; }
+
+/* ---- Übungsauswahl ---- */
+.picker {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  padding: calc(12px + env(safe-area-inset-top)) 16px 0;
+  max-width: 640px;
+  margin: 0 auto;
+}
+.picker-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.picker-head h2 { margin: 6px 0; color: var(--text); font-size: 1.2rem; }
+.picker-search { margin: 8px 0; }
+.region-chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+.region-chips::-webkit-scrollbar { display: none; }
+.region-chips .chip { flex-shrink: 0; }
+.picker-list {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+}
+.picker-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 12px;
+  margin-bottom: 6px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  cursor: pointer;
+}
+.picker-item.added { border-color: var(--good); background: var(--good-soft); }
+.picker-item.custom { border-style: dashed; }
+.picker-add {
+  width: 32px; height: 32px; flex-shrink: 0;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--surface-2);
+  font-weight: 700;
+}
+.picker-item.added .picker-add { background: var(--good); color: #fff; }

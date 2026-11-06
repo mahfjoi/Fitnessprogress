@@ -112,11 +112,11 @@ export function exerciseHistory(data: AppData, exerciseId: string): HistoryPoint
 
 // ---------- Mutationen ----------
 
-export function ensureExercise(data: AppData, name: string): [AppData, Exercise] {
+export function ensureExercise(data: AppData, name: string, region?: string): [AppData, Exercise] {
   const trimmed = name.trim()
   const existing = data.exercises.find((e) => e.name.toLowerCase() === trimmed.toLowerCase())
   if (existing) return [data, existing]
-  const ex: Exercise = { id: uid(), name: trimmed }
+  const ex: Exercise = region ? { id: uid(), name: trimmed, region } : { id: uid(), name: trimmed }
   return [{ ...data, exercises: [...data.exercises, ex] }, ex]
 }
 

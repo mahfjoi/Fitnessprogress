@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { AppData, PlanDay, PlanItem } from '../types'
 import { ensureExercise, exerciseName, uid } from '../store'
+import ExercisePicker from '../components/ExercisePicker'
 
 interface Props {
   data: AppData
@@ -88,16 +89,24 @@ function DayEditor({
   onChange: (fn: (day: PlanDay) => PlanDay) => void
   onDelete: () => void
 }) {
-  const [exName, setExName] = useState('')
+  const [picking, setPicking] = useState(false)
 
-  const addExercise = () => {
-    if (!exName.trim()) return
+  // Antippen fügt hinzu; erneutes Antippen einer schon enthaltenen Übung entfernt sie wieder
+  const toggleExercise = (name: string, region: string | undefined) => {
     update((d) => {
-      const [d2, ex] = ensureExercise(d, exName)
-      const item: PlanItem = { id: uid(), exerciseId: ex.id, sets: 3, targetReps: '8-12', restSec: 90 }
-      return { ...d2, days: d2.days.map((x) => (x.id === day.id ? { ...x, items: [...x.items, item] } : x)) }
+      const [d2, ex] = ensureExercise(d, name, region)
+      return {
+        ...d2,
+        days: d2.days.map((x) => {
+          if (x.id !== day.id) return x
+          if (x.items.some((it) => it.exerciseId === ex.id)) {
+            return { ...x, items: x.items.filter((it) => it.exerciseId !== ex.id) }
+          }
+          const item: PlanItem = { id: uid(), exerciseId: ex.id, sets: 3, targetReps: '8-12', restSec: 90 }
+          return { ...x, items: [...x.items, item] }
+        }),
+      }
     })
-    setExName('')
   }
 
   const setItem = (id: string, patch: Partial<PlanItem>) =>
@@ -137,19 +146,16 @@ function DayEditor({
         </div>
       ))}
 
-      <div className="row add-row">
-        <input
-          list="exercise-list"
-          placeholder="Übung hinzufügen (z. B. Bankdrücken)"
-          value={exName}
-          onChange={(e) => setExName(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && addExercise()}
+      <button className="btn primary" onClick={() => setPicking(true)}>+ Übungen hinzufügen</button>
+      {picking && (
+        <ExercisePicker
+          data={data}
+          title={`Übungen für ${day.name}`}
+          addedNames={day.items.map((it) => exerciseName(data, it.exerciseId))}
+          onPick={toggleExercise}
+          onClose={() => setPicking(false)}
         />
-        <button className="btn primary" onClick={addExercise}>+</button>
-      </div>
-      <datalist id="exercise-list">
-        {data.exercises.map((e) => <option key={e.id} value={e.name} />)}
-      </datalist>
+      )}
 
       <button className="btn danger-outline" onClick={onDelete}>Trainingstag löschen</button>
     </div>

@@ -4,7 +4,7 @@ Schlanke Trainings-Web-App: Trainingsplan erstellen und Fortschritt tracken – 
 
 ## Funktionen
 
-- **Plan**: mehrere Trainingstage (z. B. Push/Pull/Beine), je Übung Sätze, Ziel-Wiederholungen und Pausenzeit
+- **Plan**: mehrere Trainingstage, Übungen aus einem Katalog (filterbar nach Körperregion, mit Suche) oder eigene; je Übung Sätze, Ziel-Wiederholungen und Pausenzeit
 - **Training**: zeigt pro Übung die Gewichte und Wiederholungen vom letzten Mal und füllt die Sätze damit vor; Satz abhaken startet den Pausentimer (Vibration + Ton)
 - **Fortschritt**: Diagramm pro Übung (max. Gewicht, geschätztes 1RM, Volumen, max. Wdh.) und kompletter Verlauf
 - **Daten**: alles lokal im Browser (localStorage), Backup als JSON exportieren/importieren
