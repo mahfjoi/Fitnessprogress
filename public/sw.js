@@ -1,47 +1,31 @@
-// Einfacher Offline-Cache: Seite immer zuerst aus dem Netz (für Updates),
-// sonst aus dem Cache. Assets haben Hash-Namen und werden gecacht.
-const CACHE = 'fitnessprogress-v2'
+// Offline-Cache: immer zuerst das Netz (aktuelle Version), Cache nur als Fallback ohne Verbindung.
+const CACHE = 'fitnessprogress-v3'
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './manifest.webmanifest', './favicon.svg', './icon-192.png'])))
-  self.skipWaiting()
-})
+self.addEventListener('install', () => self.skipWaiting())
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))),
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim()),
   )
-  self.clients.claim()
 })
 
 self.addEventListener('fetch', (event) => {
   const req = event.request
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return
 
-  if (req.mode === 'navigate') {
-    event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone()
-          caches.open(CACHE).then((c) => c.put('./', copy))
-          return res
-        })
-        .catch(() => caches.match('./')),
-    )
-    return
-  }
-
+  const key = req.mode === 'navigate' ? './' : req
   event.respondWith(
-    caches.match(req).then(
-      (cached) =>
-        cached ||
-        fetch(req).then((res) => {
-          if (res.ok) {
-            const copy = res.clone()
-            caches.open(CACHE).then((c) => c.put(req, copy))
-          }
-          return res
-        }),
-    ),
+    fetch(req, { cache: 'no-cache' })
+      .then((res) => {
+        if (res.ok) {
+          const copy = res.clone()
+          caches.open(CACHE).then((c) => c.put(key, copy))
+        }
+        return res
+      })
+      .catch(() => caches.match(key).then((cached) => cached || Response.error())),
   )
 })

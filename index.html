@@ -2,6 +2,42 @@
 <html lang="de">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Zeigt Fehler direkt an, statt nur eine leere Seite
+      (function () {
+        var failed = []
+        function show(msg) {
+          if (!document.body) return document.addEventListener('DOMContentLoaded', function () { show(msg) })
+          if (document.getElementById('boot-error')) return
+          var box = document.createElement('div')
+          box.id = 'boot-error'
+          box.style.cssText = 'font-family:system-ui;padding:24px;color:#c73a3a;background:#fff'
+          box.innerHTML =
+            '<h2>Fehler beim Laden</h2><pre style="white-space:pre-wrap;word-break:break-word;font-size:13px;color:#333">' +
+            String(msg).replace(/</g, '&lt;') + (failed.length ? '\n\nNicht geladen:\n' + failed.join('\n') : '') +
+            '\n\n' + navigator.userAgent + '</pre>' +
+            '<button id="boot-reset" style="font-size:16px;padding:12px 16px;border-radius:10px;border:0;background:#2a6fdb;color:#fff">Cache leeren &amp; neu laden</button>'
+          document.body.appendChild(box)
+          document.getElementById('boot-reset').onclick = function () {
+            var jobs = []
+            if (navigator.serviceWorker) jobs.push(navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister() })) }))
+            if (window.caches) jobs.push(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k) })) }))
+            Promise.all(jobs).catch(function () {}).then(function () { location.replace(location.pathname + '?t=' + Date.now()) })
+          }
+        }
+        // Capture-Phase: fängt auch fehlgeschlagene Script-/CSS-Downloads ab
+        window.addEventListener('error', function (e) {
+          var t = e.target
+          if (t && t !== window && (t.src || t.href)) { failed.push(t.src || t.href); return }
+          show(e.message + (e.filename ? '\n' + e.filename + ':' + e.lineno : ''))
+        }, true)
+        window.addEventListener('unhandledrejection', function (e) { show(e.reason && e.reason.stack || e.reason) })
+        setTimeout(function () {
+          var root = document.getElementById('root')
+          if (root && root.childElementCount === 0) show('App wurde nach 8 Sekunden nicht gestartet.\nURL: ' + location.href)
+        }, 8000)
+      })()
+    </script>
     <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
     <link rel="apple-touch-icon" href="%BASE_URL%apple-touch-icon.png" />
     <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
@@ -16,27 +52,6 @@
   </head>
   <body>
     <div id="root"></div>
-    <script>
-      // Zeigt Fehler direkt an, statt nur eine leere Seite
-      (function () {
-        function show(msg) {
-          if (document.getElementById('boot-error')) return
-          var box = document.createElement('div')
-          box.id = 'boot-error'
-          document.body.appendChild(box)
-          box.innerHTML =
-            '<div style="font-family:system-ui;padding:24px;color:#c73a3a">' +
-            '<h2>Fehler beim Laden</h2><pre style="white-space:pre-wrap;font-size:13px;color:#333">' +
-            String(msg).replace(/</g, '&lt;') + '\n\n' + navigator.userAgent + '</pre></div>'
-        }
-        window.addEventListener('error', function (e) { show(e.message + (e.filename ? '\n' + e.filename + ':' + e.lineno : '')) })
-        window.addEventListener('unhandledrejection', function (e) { show(e.reason && e.reason.stack || e.reason) })
-        setTimeout(function () {
-          var root = document.getElementById('root')
-          if (root && root.childElementCount === 0) show('App wurde nach 8 Sekunden nicht gestartet (Script nicht geladen?)\nURL: ' + location.href)
-        }, 8000)
-      })()
-    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
