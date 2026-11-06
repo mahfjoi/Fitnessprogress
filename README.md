@@ -16,3 +16,13 @@ npm install
 npm run dev      # Entwicklungsserver
 npm run build    # Produktions-Build nach dist/
 ```
+
+## Auf dem Handy nutzen
+
+Die App wird bei jedem Push auf `master` automatisch auf GitHub Pages veröffentlicht:
+**https://mahfjoi.github.io/Fitnessprogress/**
+
+- **iPhone (Safari):** Teilen → „Zum Home-Bildschirm“
+- **Android (Chrome):** Menü ⋮ → „App installieren“ bzw. „Zum Startbildschirm hinzufügen“
+
+Danach startet sie wie eine normale App und funktioniert auch offline.
