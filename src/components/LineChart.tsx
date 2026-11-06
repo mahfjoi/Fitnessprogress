@@ -32,7 +32,7 @@ export default function LineChart({
     maxY += 5
   }
   const span = maxY - minY
-  minY = Math.max(0, minY - span * 0.1)
+  minY = minY >= 0 ? Math.max(0, minY - span * 0.1) : minY - span * 0.1
   maxY = maxY + span * 0.1
   const ticks = niceTicks(minY, maxY, 4)
   minY = Math.min(minY, ticks[0])

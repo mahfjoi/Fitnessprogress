@@ -33,7 +33,12 @@ export default function NumInput({
       value={text}
       onFocus={(e) => e.target.select()}
       onChange={(e) => {
-        const t = e.target.value.replace(decimal ? /[^0-9.,]/g : /[^0-9]/g, '')
+        let t = e.target.value.replace(decimal ? /[^0-9.,-]/g : /[^0-9]/g, '')
+        if (decimal) {
+          t = (t.startsWith('-') ? '-' : '') + t.replace(/-/g, '')
+          // iPhone-Zahlentastatur hat kein Minus: negatives Vorzeichen bleibt beim Überschreiben erhalten
+          if (value !== null && value < 0 && t !== '' && !t.startsWith('-')) t = '-' + t
+        }
         setText(t)
         onChange(parse(t))
       }}

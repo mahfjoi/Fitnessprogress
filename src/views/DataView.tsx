@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react'
 import type { AppData } from '../types'
 import { emptyData, finishedSessions, validate } from '../store'
-import { applyPlanImport, parsePlanText, type ImportedDay } from '../planImport'
+import { applyPlanImport, historyCount, parsePlanText, type ImportedDay } from '../planImport'
+import { formatDate, formatKg } from '../format'
 
 interface Props {
   data: AppData
@@ -52,7 +53,8 @@ export default function DataView({ data, update }: Props) {
     const replaced = preview.filter((p) => data.days.some((d) => d.name.trim().toLowerCase() === p.name.trim().toLowerCase()))
     if (replaced.length > 0 && !confirm(`Folgende Trainingstage gibt es schon und werden ersetzt: ${replaced.map((r) => r.name).join(', ')}. Dein Trainingsverlauf bleibt erhalten. Fortfahren?`)) return
     update((d) => applyPlanImport(d, preview))
-    alert(`${preview.length} Trainingstag(e) importiert.`)
+    const h = historyCount(preview)
+    alert(`${preview.length} Trainingstag(e) importiert${h ? `, inkl. letzter Werte für ${h} Übungen` : ''}.`)
     setPlanText('')
     setPreview(null)
   }
@@ -87,10 +89,18 @@ export default function DataView({ data, update }: Props) {
             {preview.map((day, i) => (
               <div key={i}>
                 <strong>{day.name}</strong>
+                {day.lastDate && historyCount([day]) > 0 && (
+                  <span className="muted"> · letztes Training {formatDate(day.lastDate)}</span>
+                )}
                 <ul>
                   {day.items.map((it, j) => (
                     <li key={j}>
                       {it.exercise} – {it.sets} × {it.targetReps || '?'}{it.restSec ? `, ${it.restSec}s Pause` : ''}
+                      {it.history.length > 0 && (
+                        <div className="muted">
+                          zuletzt: {it.history.map((h) => (h.weight === null ? `${h.reps} Wdh.` : `${formatKg(h.weight)}×${h.reps}`)).join(', ')}
+                        </div>
+                      )}
                     </li>
                   ))}
                 </ul>

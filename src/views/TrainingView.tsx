@@ -66,7 +66,7 @@ export default function TrainingView({ data, update, goToPlan }: Props) {
           <h2>Letzte Trainings</h2>
           {history.slice(0, 10).map((s) => {
             const sets = s.entries.flatMap((e) => e.sets.filter((x) => x.done))
-            const volume = sets.reduce((sum, x) => sum + (x.weight ?? 0) * (x.reps ?? 0), 0)
+            const volume = sets.reduce((sum, x) => sum + Math.max(0, x.weight ?? 0) * (x.reps ?? 0), 0)
             const mins = s.finishedAt ? Math.round((s.finishedAt - s.startedAt) / 60000) : 0
             return (
               <div key={s.id} className="card compact row">

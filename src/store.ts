@@ -94,15 +94,16 @@ export function exerciseHistory(data: AppData, exerciseId: string): HistoryPoint
     const entry = s.entries.find((e) => e.exerciseId === exerciseId)
     const sets = entry?.sets.filter((x) => x.done && x.reps !== null) ?? []
     if (sets.length === 0) continue
-    let maxWeight = 0
+    let maxWeight = -Infinity
     let volume = 0
-    let best1RM = 0
+    let best1RM = -Infinity
     for (const x of sets) {
       const w = x.weight ?? 0
       const r = x.reps ?? 0
       maxWeight = Math.max(maxWeight, w)
-      volume += w * r
-      best1RM = Math.max(best1RM, estimate1RM(w, r))
+      // Negative Gewichte = Unterstützung (z. B. Klimmzugmaschine): kein Volumen, 1RM = Gewicht
+      volume += Math.max(0, w) * r
+      best1RM = Math.max(best1RM, w > 0 ? estimate1RM(w, r) : w)
     }
     points.push({ date: s.startedAt, sets, maxWeight, volume, best1RM })
   }
