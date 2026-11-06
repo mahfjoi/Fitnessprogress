@@ -259,3 +259,14 @@ input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 }
 .tt-value { font-weight: 700; }
 .tt-label { opacity: 0.75; font-size: 0.7rem; }
+
+.error-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.75rem;
+  background: var(--surface-2);
+  padding: 10px;
+  border-radius: 8px;
+  max-height: 50vh;
+  overflow: auto;
+}

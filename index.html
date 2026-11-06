@@ -20,9 +20,11 @@
       // Zeigt Fehler direkt an, statt nur eine leere Seite
       (function () {
         function show(msg) {
-          var root = document.getElementById('root')
-          if (root && root.childElementCount > 0) return
-          document.body.innerHTML =
+          if (document.getElementById('boot-error')) return
+          var box = document.createElement('div')
+          box.id = 'boot-error'
+          document.body.appendChild(box)
+          box.innerHTML =
             '<div style="font-family:system-ui;padding:24px;color:#c73a3a">' +
             '<h2>Fehler beim Laden</h2><pre style="white-space:pre-wrap;font-size:13px;color:#333">' +
             String(msg).replace(/</g, '&lt;') + '\n\n' + navigator.userAgent + '</pre></div>'

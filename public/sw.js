@@ -1,6 +1,6 @@
 // Einfacher Offline-Cache: Seite immer zuerst aus dem Netz (für Updates),
 // sonst aus dem Cache. Assets haben Hash-Namen und werden gecacht.
-const CACHE = 'fitnessprogress-v1'
+const CACHE = 'fitnessprogress-v2'
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './manifest.webmanifest', './favicon.svg', './icon-192.png'])))
