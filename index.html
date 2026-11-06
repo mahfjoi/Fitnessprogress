@@ -16,6 +16,25 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Zeigt Fehler direkt an, statt nur eine leere Seite
+      (function () {
+        function show(msg) {
+          var root = document.getElementById('root')
+          if (root && root.childElementCount > 0) return
+          document.body.innerHTML =
+            '<div style="font-family:system-ui;padding:24px;color:#c73a3a">' +
+            '<h2>Fehler beim Laden</h2><pre style="white-space:pre-wrap;font-size:13px;color:#333">' +
+            String(msg).replace(/</g, '&lt;') + '\n\n' + navigator.userAgent + '</pre></div>'
+        }
+        window.addEventListener('error', function (e) { show(e.message + (e.filename ? '\n' + e.filename + ':' + e.lineno : '')) })
+        window.addEventListener('unhandledrejection', function (e) { show(e.reason && e.reason.stack || e.reason) })
+        setTimeout(function () {
+          var root = document.getElementById('root')
+          if (root && root.childElementCount === 0) show('App wurde nach 8 Sekunden nicht gestartet (Script nicht geladen?)\nURL: ' + location.href)
+        }, 8000)
+      })()
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
