@@ -1,6 +1,7 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import type { AppData } from '../types'
 import { emptyData, finishedSessions, validate } from '../store'
+import { applyPlanImport, parsePlanText, type ImportedDay } from '../planImport'
 
 interface Props {
   data: AppData
@@ -9,6 +10,10 @@ interface Props {
 
 export default function DataView({ data, update }: Props) {
   const fileRef = useRef<HTMLInputElement>(null)
+  const planFileRef = useRef<HTMLInputElement>(null)
+  const [planText, setPlanText] = useState('')
+  const [preview, setPreview] = useState<ImportedDay[] | null>(null)
+  const [planError, setPlanError] = useState('')
 
   const exportData = () => {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
@@ -31,6 +36,27 @@ export default function DataView({ data, update }: Props) {
     }
   }
 
+  const checkPlan = (text: string) => {
+    setPlanText(text)
+    try {
+      setPreview(parsePlanText(text))
+      setPlanError('')
+    } catch (e) {
+      setPreview(null)
+      setPlanError((e as Error).message)
+    }
+  }
+
+  const importPlan = () => {
+    if (!preview) return
+    const replaced = preview.filter((p) => data.days.some((d) => d.name.trim().toLowerCase() === p.name.trim().toLowerCase()))
+    if (replaced.length > 0 && !confirm(`Folgende Trainingstage gibt es schon und werden ersetzt: ${replaced.map((r) => r.name).join(', ')}. Dein Trainingsverlauf bleibt erhalten. Fortfahren?`)) return
+    update((d) => applyPlanImport(d, preview))
+    alert(`${preview.length} Trainingstag(e) importiert.`)
+    setPlanText('')
+    setPreview(null)
+  }
+
   const reset = () => {
     if (!confirm('Wirklich ALLE Daten löschen? Das kann nicht rückgängig gemacht werden.')) return
     update(() => emptyData())
@@ -39,7 +65,58 @@ export default function DataView({ data, update }: Props) {
   return (
     <div>
       <h1>Daten</h1>
+
       <div className="card">
+        <h3>Plan importieren</h3>
+        <p className="muted small">
+          Plantext einfügen oder Textdatei wählen. Vorhandene Trainingstage mit gleichem Namen werden ersetzt, alles andere bleibt.
+        </p>
+        <textarea
+          className="plan-text"
+          rows={8}
+          placeholder={'Tag: Tag 1\nBankdrücken | 3 | 8-10 | 120\nKlimmzüge | 3 | 6-8 | 120'}
+          value={planText}
+          onChange={(e) => checkPlan(e.target.value)}
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
+        />
+        {planError && planText.trim() && <p className="error small">{planError}</p>}
+        {preview && (
+          <div className="import-preview small">
+            {preview.map((day, i) => (
+              <div key={i}>
+                <strong>{day.name}</strong>
+                <ul>
+                  {day.items.map((it, j) => (
+                    <li key={j}>
+                      {it.exercise} – {it.sets} × {it.targetReps || '?'}{it.restSec ? `, ${it.restSec}s Pause` : ''}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="stack">
+          <button className="btn primary" disabled={!preview} onClick={importPlan}>Plan importieren</button>
+          <button className="btn" onClick={() => planFileRef.current?.click()}>Textdatei wählen</button>
+          <input
+            ref={planFileRef}
+            type="file"
+            accept=".txt,text/plain"
+            hidden
+            onChange={async (e) => {
+              const f = e.target.files?.[0]
+              if (f) checkPlan(await f.text())
+              e.target.value = ''
+            }}
+          />
+        </div>
+      </div>
+
+      <div className="card">
+        <h3>Backup</h3>
         <p className="small">
           Deine Daten werden nur lokal auf diesem Gerät im Browser gespeichert.
           Exportiere regelmäßig ein Backup, damit nichts verloren geht.
